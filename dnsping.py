@@ -44,7 +44,14 @@ __license__ = 'BSD'
 __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
+ts = False
+tsFormat = '{:%Y-%m-%d %H:%M:%S}'
 
+def printTS(ts):
+    global tsFormat
+    if ts:
+        print(
+            tsFormat.format(datetime.datetime.now()), end = ' | ')
 
 def usage():
     print("""%s version %s
@@ -151,7 +158,8 @@ def main():
         elif o in ("-S", "--srcip"):
             src_ip = a
         elif o in ("-a", "--timestamp"):
-            timestamp = True
+            print("timestamp")
+            ts = True
         else:
             usage()
 
@@ -206,6 +214,7 @@ def main():
                 print("Error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
         except dns.resolver.Timeout:
+            printTS(ts)
             if not quiet:
                 print("Request timeout", flush=True)
         except dns.resolver.NoAnswer:
@@ -214,9 +223,7 @@ def main():
         else:
             elapsed = answers.response.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
-            if timestamp:
-                print(
-                        '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), end = ' | ')
+            printTS(ts)
             if not quiet:
                 print(
                     "%d bytes from %s: seq=%-3d time=%.3f ms" % (
