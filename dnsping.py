@@ -32,6 +32,7 @@ import signal
 import socket
 import sys
 import time
+import datetime
 from statistics import stdev
 
 import dns.flags
@@ -63,6 +64,7 @@ usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t ty
   -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
+  -a  --timestamp Add timestamp to output
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -101,9 +103,9 @@ def main():
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46e",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46ea",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "timestamp"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -148,6 +150,8 @@ def main():
                 print("WARNING: Source ports below 1024 are only available to superuser", flush=True)
         elif o in ("-S", "--srcip"):
             src_ip = a
+        elif o in ("-a", "--timestamp"):
+            timestamp = True
         else:
             usage()
 
@@ -210,6 +214,9 @@ def main():
         else:
             elapsed = answers.response.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
+            if timestamp:
+                print(
+                        '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), end = ' | ')
             if not quiet:
                 print(
                     "%d bytes from %s: seq=%-3d time=%.3f ms" % (
